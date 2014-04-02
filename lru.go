@@ -139,7 +139,17 @@ func (cache *Cache) Oldest() (oldest time.Time) {
         oldest = lastElem.Value.(*object).accessTime
     }
 
-    return
+	return
+}
+
+func (cache *Cache) keys() []string {
+	keys := make([]string, 0, cache.list.Len())
+
+	for element := cache.list.Front(); element != nil; element = element.Next() {
+		keys = append(keys, element.Value.(*object).key)
+	}
+
+	return keys
 }
 
 func (cache *Cache) moveToFront(element *list.Element) {
@@ -184,9 +194,7 @@ func (cache *Cache) trim(futureSize uint64) {
 }
 
 func (cache *Cache) clearFiles() {
-    files, _ := ioutil.ReadDir(cache.path)
-
-    for _, file := range files {
-        os.RemoveAll(cache.FilePath(file.Name()))
-    }
+	for _, key := range cache.keys() {
+		os.RemoveAll(cache.FilePath(key))
+	}
 }
