@@ -177,8 +177,8 @@ func (cache *Cache) addNew(key string, value []byte) {
 }
 
 func (cache *Cache) trim(futureSize uint64) {
-    for cache.currentSize > cache.maxSize {
-        element := cache.list.Back()
+	for futureSize > cache.maxSize {
+		element := cache.list.Back()
 
         if element == nil {
             return
@@ -189,8 +189,9 @@ func (cache *Cache) trim(futureSize uint64) {
         os.RemoveAll(cache.FilePath(value.key))
         delete(cache.table, value.key)
 
-        cache.currentSize -= value.size
-    }
+		cache.currentSize -= value.size
+		futureSize -= value.size
+	}
 }
 
 func (cache *Cache) clearFiles() {
