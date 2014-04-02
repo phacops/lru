@@ -19,9 +19,9 @@ type object struct {
 type Cache struct {
 	sync.Mutex
 
-	list        *list.List
-	table       map[string]*list.Element
-	currentSize uint64
+	list  *list.List
+	table map[string]*list.Element
+	size  uint64
 
 	maxSize uint64
 	path    string
@@ -98,7 +98,7 @@ func (cache *Cache) Delete(key string) bool {
 	cache.list.Remove(element)
 	delete(cache.table, key)
 
-	cache.currentSize -= element.Value.(*object).size
+	cache.size -= element.Value.(*object).size
 
 	return true
 }
@@ -110,14 +110,14 @@ func (cache *Cache) Clear() {
 	cache.clearFiles()
 	cache.list.Init()
 	cache.table = make(map[string]*list.Element)
-	cache.currentSize = 0
+	cache.size = 0
 }
 
-func (cache *Cache) CurrentSize() uint64 {
+func (cache *Cache) Size() uint64 {
 	cache.Lock()
 	defer cache.Unlock()
 
-	return cache.currentSize
+	return cache.size
 }
 
 func (cache *Cache) MaxSize() uint64 {
@@ -155,7 +155,7 @@ func (cache *Cache) moveToFront(element *list.Element) {
 
 func (cache *Cache) addNew(key string, value []byte) {
 	newObject := &object{key, uint64(len(value)), time.Now()}
-	futureSize := cache.currentSize + newObject.size
+	futureSize := cache.size + newObject.size
 
 	cache.trim(futureSize)
 
@@ -169,7 +169,7 @@ func (cache *Cache) addNew(key string, value []byte) {
 
 	element := cache.list.PushFront(newObject)
 	cache.table[key] = element
-	cache.currentSize += newObject.size
+	cache.size += newObject.size
 }
 
 func (cache *Cache) trim(futureSize uint64) {
@@ -185,7 +185,7 @@ func (cache *Cache) trim(futureSize uint64) {
 		os.RemoveAll(cache.FilePath(value.key))
 		delete(cache.table, value.key)
 
-		cache.currentSize -= value.size
+		cache.size -= value.size
 		futureSize -= value.size
 	}
 }

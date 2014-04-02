@@ -10,7 +10,7 @@ func TestInitialState(t *testing.T) {
 	cache := New(1, "/tmp")
 	defer cache.Clear()
 
-	if currentSize := cache.CurrentSize(); currentSize != 0 {
+	if currentSize := cache.Size(); currentSize != 0 {
 		t.Errorf("size = %v, want 0", currentSize)
 	}
 
@@ -48,7 +48,7 @@ func TestSetUpdatesSize(t *testing.T) {
 
 	cache.Set(key, emptyValue)
 
-	if currentSize := cache.CurrentSize(); currentSize != 0 {
+	if currentSize := cache.Size(); currentSize != 0 {
 		t.Errorf("cache.currentSize() = %v, expected 0", currentSize)
 	}
 
@@ -63,7 +63,7 @@ func TestSetUpdatesSize(t *testing.T) {
 
 	cache.Set(key, someValue)
 
-	if currentSize := cache.CurrentSize(); currentSize != fileSize {
+	if currentSize := cache.Size(); currentSize != fileSize {
 		t.Errorf("cache.currentSize() = %v, expected %v", currentSize, fileSize)
 	}
 }
@@ -97,8 +97,8 @@ func TestDelete(t *testing.T) {
 		t.Error("Expected item to be in cache.")
 	}
 
-	if currentSize := cache.CurrentSize(); currentSize != 0 {
-		t.Errorf("cache.CurrentSize() = %v, expected 0", currentSize)
+	if currentSize := cache.Size(); currentSize != 0 {
+		t.Errorf("cache.Size() = %v, expected 0", currentSize)
 	}
 
 	if _, ok := cache.Get(key); ok {
@@ -120,8 +120,8 @@ func TestClear(t *testing.T) {
 	cache.Set(key, value)
 	cache.Clear()
 
-	if currentSize := cache.CurrentSize(); currentSize != 0 {
-		t.Errorf("cache.CurrentSize() = %v, expected 0 after Clear()", currentSize)
+	if currentSize := cache.Size(); currentSize != 0 {
+		t.Errorf("cache.Size() = %v, expected 0 after Clear()", currentSize)
 	}
 }
 
@@ -141,14 +141,14 @@ func TestCapacityIsObeyed(t *testing.T) {
 	cache.Set("key2", value)
 	cache.Set("key3", value)
 
-	if currentSize := cache.CurrentSize(); currentSize != size {
-		t.Errorf("cache.CurrentSize() = %v, expected %v", currentSize, size)
+	if currentSize := cache.Size(); currentSize != size {
+		t.Errorf("cache.Size() = %v, expected %v", currentSize, size)
 	}
 
 	cache.Set("key4", value)
 
-	if currentSize := cache.CurrentSize(); currentSize != size {
-		t.Errorf("post-evict cache.CurrentSize() = %v, expected %v", currentSize, size)
+	if currentSize := cache.Size(); currentSize != size {
+		t.Errorf("post-evict cache.Size() = %v, expected %v", currentSize, size)
 	}
 }
 
