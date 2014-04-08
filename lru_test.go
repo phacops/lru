@@ -27,7 +27,8 @@ func TestSetInsertsValue(t *testing.T) {
 		t.Errorf("Couldn't read %v", key)
 	}
 
-	cache := New(1, "/tmp")
+	size := uint64(len(data))
+	cache := New(size, "/tmp")
 	defer cache.Clear()
 
 	cache.Set(key, data)
@@ -40,7 +41,15 @@ func TestSetInsertsValue(t *testing.T) {
 }
 
 func TestSetUpdatesSize(t *testing.T) {
-	cache := New(1, "/tmp")
+	fileName := "lru.go"
+	someValue, err := ioutil.ReadFile(fileName)
+
+	if err != nil {
+		t.Errorf("Couldn't read %v", fileName)
+	}
+
+	fileSize := uint64(len(someValue))
+	cache := New(fileSize, "/tmp")
 	defer cache.Clear()
 
 	emptyValue := []byte{}
@@ -49,22 +58,13 @@ func TestSetUpdatesSize(t *testing.T) {
 	cache.Set(key, emptyValue)
 
 	if currentSize := cache.Size(); currentSize != 0 {
-		t.Errorf("cache.currentSize() = %v, expected 0", currentSize)
+		t.Errorf("cache.Size() = %v, expected 0", currentSize)
 	}
 
-	key = "lru.go"
-	someValue, err := ioutil.ReadFile(key)
-
-	if err != nil {
-		t.Errorf("Couldn't read %v", key)
-	}
-
-	fileSize := uint64(len(someValue))
-
-	cache.Set(key, someValue)
+	cache.Set(fileName, someValue)
 
 	if currentSize := cache.Size(); currentSize != fileSize {
-		t.Errorf("cache.currentSize() = %v, expected %v", currentSize, fileSize)
+		t.Errorf("cache.Size() = %v, expected %v", currentSize, fileSize)
 	}
 }
 
@@ -84,7 +84,8 @@ func TestDelete(t *testing.T) {
 		t.Errorf("Couldn't read %v", key)
 	}
 
-	cache := New(1, "/tmp")
+	size := uint64(len(value))
+	cache := New(size, "/tmp")
 	defer cache.Clear()
 
 	if cache.Delete(key) {
