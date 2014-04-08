@@ -154,7 +154,13 @@ func (cache *Cache) moveToFront(element *list.Element) {
 }
 
 func (cache *Cache) addNew(key string, value []byte) {
-	newObject := &object{key, uint64(len(value)), time.Now()}
+	size := uint64(len(value))
+
+	if size > cache.maxSize {
+		return
+	}
+
+	newObject := &object{key, size, time.Now()}
 	futureSize := cache.size + newObject.size
 
 	cache.trim(futureSize)
