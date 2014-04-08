@@ -153,6 +153,29 @@ func TestCapacityIsObeyed(t *testing.T) {
 	}
 }
 
+func TestFileTooBigIsRejected(t *testing.T) {
+	key := "lru.go"
+	value, err := ioutil.ReadFile(key)
+
+	if err != nil {
+		t.Errorf("Couldn't read %v", key)
+	}
+
+	size := uint64(len(value)) - 1
+	cache := New(size, "/tmp")
+	defer cache.Clear()
+
+	cache.Set("key", value)
+
+	if _, ok := cache.Get("key"); ok {
+		t.Error("Cache returned a value after trying to insert a bigger value than cache.maxSize()")
+	}
+
+	if currentSize := cache.Size(); currentSize != 0 {
+		t.Errorf("post-set cache.Size() = %v, expected %v", currentSize, 0)
+	}
+}
+
 func TestLRUIsEvicted(t *testing.T) {
 	key := "lru.go"
 	value, err := ioutil.ReadFile(key)
