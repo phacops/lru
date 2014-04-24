@@ -3,6 +3,7 @@ package lru
 import (
 	"bytes"
 	"io/ioutil"
+	"os"
 	"testing"
 )
 
@@ -37,6 +38,10 @@ func TestSetInsertsValue(t *testing.T) {
 
 	if !ok || !bytes.Equal(value, data) {
 		t.Errorf("Cache has incorrect value")
+	}
+
+	if _, err := os.Stat(cache.FilePath(key)); os.IsNotExist(err) {
+		t.Error("File was not created on disk.")
 	}
 }
 
@@ -104,6 +109,10 @@ func TestDelete(t *testing.T) {
 
 	if _, ok := cache.Get(key); ok {
 		t.Error("Cache returned a value after deletion.")
+	}
+
+	if _, err := os.Stat(cache.FilePath(key)); !os.IsNotExist(err) {
+		t.Error("File was not removed from disk.")
 	}
 }
 
