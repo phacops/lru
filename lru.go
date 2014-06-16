@@ -3,9 +3,9 @@ package lru
 import (
 	"container/list"
 	"encoding/base64"
+	"fmt"
 	"hash/fnv"
 	"io/ioutil"
-	"log"
 	"os"
 	"sync"
 	"time"
@@ -157,9 +157,10 @@ func (cache *Cache) moveToFront(element *list.Element) {
 func (cache *Cache) addNew(key string, value []byte) {
 	size := uint64(len(value))
 
-	log.Printf("lru: new object of size %d\n", size)
+	fmt.Printf("lru: new object of size %d\n", size)
 
 	if size > cache.maxSize {
+		fmt.Println("lru: file is too large")
 		return
 	}
 
@@ -171,16 +172,16 @@ func (cache *Cache) addNew(key string, value []byte) {
 		err := ioutil.WriteFile(cache.FilePath(key), value, 0644)
 
 		if err != nil {
-			log.Println("lru: " + err.Error())
+			fmt.Println("lru: " + err.Error())
 			return
 		}
 
 		element := cache.list.PushFront(newObject)
 		cache.table[key] = element
 		cache.size += (*newObject).size
-		log.Printf("lru: added %d, new size is %d\n", (*newObject).size, cache.size)
+		fmt.Printf("lru: added %d, new size is %d\n", (*newObject).size, cache.size)
 	} else {
-		log.Println("lru: file already exist")
+		fmt.Println("lru: file already exist")
 	}
 }
 
@@ -189,12 +190,16 @@ func (cache *Cache) trim(futureSize uint64) {
 		element := cache.list.Back()
 
 		if element == nil {
+			fmt.Println("lru: file is too large")
 			return
 		}
 
 		value := cache.list.Remove(element).(*object)
 
-		os.RemoveAll(cache.FilePath(value.key))
+		if err := os.RemoveAll(cache.FilePath(value.key)); err != nil {
+			fmt.Printf("lru: couldn't delete %s\n", cache.FilePath(value.key))
+		}
+
 		delete(cache.table, value.key)
 
 		cache.size -= value.size
