@@ -36,6 +36,7 @@ func hashCacheKey(data string) string {
 }
 
 func New(maxSize uint64, path string) *Cache {
+	fmt.Printf("lru: new cache of size %d", maxSize)
 	return &Cache{
 		list:    list.New(),
 		table:   make(map[string]*list.Element),
