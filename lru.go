@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"hash/fnv"
 	"io/ioutil"
+	"log"
 	"os"
 	"sync"
 	"time"
@@ -156,26 +157,31 @@ func (cache *Cache) moveToFront(element *list.Element) {
 func (cache *Cache) addNew(key string, value []byte) {
 	size := uint64(len(value))
 
+	log.Printf("lru: new object of size %d\n", size)
+
 	if size > cache.maxSize {
 		return
 	}
 
 	newObject := &object{key, size, time.Now()}
-	futureSize := cache.size + newObject.size
 
-	cache.trim(futureSize)
+	cache.trim(cache.size + newObject.size)
 
 	if _, err := os.Stat(cache.FilePath(key)); os.IsNotExist(err) {
 		err := ioutil.WriteFile(cache.FilePath(key), value, 0644)
 
 		if err != nil {
+			log.Println("lru: " + err.Error())
 			return
 		}
-	}
 
-	element := cache.list.PushFront(newObject)
-	cache.table[key] = element
-	cache.size += newObject.size
+		element := cache.list.PushFront(newObject)
+		cache.table[key] = element
+		cache.size += (*newObject).size
+		log.Printf("lru: added %d, new size is %d\n", (*newObject).size, cache.size)
+	} else {
+		log.Println("lru: file already exist")
+	}
 }
 
 func (cache *Cache) trim(futureSize uint64) {
