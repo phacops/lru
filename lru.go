@@ -191,14 +191,14 @@ func (cache *Cache) trim(futureSize uint64) {
 	for futureSize > cache.maxSize {
 		element := cache.list.Back()
 
-		fmt.Printf("lru: deleting %s\n", cache.FilePath(value.key))
-
 		if element == nil {
 			fmt.Println("lru: file is too large")
 			return
 		}
 
 		value := cache.list.Remove(element).(*object)
+
+		fmt.Printf("lru: deleting %s\n", cache.FilePath(value.key))
 
 		if err := os.RemoveAll(cache.FilePath(value.key)); err != nil {
 			fmt.Printf("lru: couldn't delete %s\n", cache.FilePath(value.key))
