@@ -36,7 +36,8 @@ func hashCacheKey(data string) string {
 }
 
 func New(maxSize uint64, path string) *Cache {
-	fmt.Printf("lru: new cache of size %d", maxSize)
+	fmt.Printf("lru: new cache of size %d\n", maxSize)
+
 	return &Cache{
 		list:    list.New(),
 		table:   make(map[string]*list.Element),
@@ -189,6 +190,8 @@ func (cache *Cache) addNew(key string, value []byte) {
 func (cache *Cache) trim(futureSize uint64) {
 	for futureSize > cache.maxSize {
 		element := cache.list.Back()
+
+		fmt.Printf("lru: deleting %s\n", cache.FilePath(value.key))
 
 		if element == nil {
 			fmt.Println("lru: file is too large")
