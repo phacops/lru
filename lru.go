@@ -35,15 +35,22 @@ func hashCacheKey(data string) string {
 	return base64.URLEncoding.EncodeToString(hash.Sum(nil))
 }
 
-func New(maxSize uint64, path string) *Cache {
+func New(maxSize uint64, path string, clearCacheOnBoot bool) *Cache {
 	fmt.Printf("lru: new cache of size %d\n", maxSize)
 
-	return &Cache{
+	cache := Cache{
 		list:    list.New(),
 		table:   make(map[string]*list.Element),
 		maxSize: maxSize,
 		path:    path,
 	}
+
+	if clearCacheOnBoot {
+		fmt.Println("lru: clear cache on boot")
+		os.RemoveAll(cache.path + "/*")
+	}
+
+	return &cache
 }
 
 func (cache *Cache) FilePath(key string) string {
