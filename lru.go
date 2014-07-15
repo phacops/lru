@@ -47,7 +47,8 @@ func New(maxSize uint64, path string, clearCacheOnBoot bool) *Cache {
 
 	if clearCacheOnBoot {
 		fmt.Println("lru: clear cache on boot")
-		os.RemoveAll(cache.path + "/*")
+		os.RemoveAll(cache.path)
+		os.MkdirAll(cache.path, 0755)
 	}
 
 	return &cache
