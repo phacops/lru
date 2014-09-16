@@ -26,6 +26,8 @@ type Cache struct {
 
 	maxSize uint64
 	path    string
+
+	ShowDebug bool
 }
 
 func hashCacheKey(data string) string {
@@ -36,8 +38,6 @@ func hashCacheKey(data string) string {
 }
 
 func New(maxSize uint64, path string, clearCacheOnBoot bool) *Cache {
-	fmt.Printf("lru: new cache of size %d\n", maxSize)
-
 	cache := Cache{
 		list:    list.New(),
 		table:   make(map[string]*list.Element),
@@ -45,13 +45,21 @@ func New(maxSize uint64, path string, clearCacheOnBoot bool) *Cache {
 		path:    path,
 	}
 
+	cache.Debug(fmt.Sprintf("new cache of size %d", maxSize))
+
 	if clearCacheOnBoot {
-		fmt.Println("lru: clear cache on boot")
+		cache.Debug("clearing cache on boot")
 		os.RemoveAll(cache.path)
 		os.MkdirAll(cache.path, 0755)
 	}
 
 	return &cache
+}
+
+func (cache *Cache) Debug(msg string) {
+	if cache.ShowDebug {
+		fmt.Println("[lru]", msg)
+	}
 }
 
 func (cache *Cache) FilePath(key string) string {
@@ -167,10 +175,10 @@ func (cache *Cache) moveToFront(element *list.Element) {
 func (cache *Cache) addNew(key string, value []byte) {
 	size := uint64(len(value))
 
-	fmt.Printf("lru: new object of size %d\n", size)
+	cache.Debug(fmt.Sprintf("new object of size %d", size))
 
 	if size > cache.maxSize {
-		fmt.Println("lru: file is too large")
+		cache.Debug("file is too large")
 		return
 	}
 
@@ -182,16 +190,16 @@ func (cache *Cache) addNew(key string, value []byte) {
 		err := ioutil.WriteFile(cache.FilePath(key), value, 0644)
 
 		if err != nil {
-			fmt.Println("lru: " + err.Error())
+			cache.Debug(err.Error())
 			return
 		}
 
 		element := cache.list.PushFront(newObject)
 		cache.table[key] = element
 		cache.size += (*newObject).size
-		fmt.Printf("lru: added %d, new size is %d\n", (*newObject).size, cache.size)
+		cache.Debug(fmt.Sprintf("added %d, new size is %d", (*newObject).size, cache.size))
 	} else {
-		fmt.Println("lru: file already exist")
+		cache.Debug("file already exist")
 	}
 }
 
@@ -200,16 +208,16 @@ func (cache *Cache) trim(futureSize uint64) {
 		element := cache.list.Back()
 
 		if element == nil {
-			fmt.Println("lru: file is too large")
+			cache.Debug("file is too large")
 			return
 		}
 
 		value := cache.list.Remove(element).(*object)
 
-		fmt.Printf("lru: deleting %s\n", cache.FilePath(value.key))
+		cache.Debug(fmt.Sprintf("deleting %s", cache.FilePath(value.key)))
 
 		if err := os.RemoveAll(cache.FilePath(value.key)); err != nil {
-			fmt.Printf("lru: couldn't delete %s\n", cache.FilePath(value.key))
+			cache.Debug(fmt.Sprintf("couldn't delete %s", cache.FilePath(value.key)))
 		}
 
 		delete(cache.table, value.key)
