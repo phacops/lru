@@ -27,7 +27,12 @@ type Cache struct {
 	maxSize uint64
 	path    string
 
-	ShowDebug bool
+	debug bool
+}
+
+type Options struct {
+	ClearCacheOnBoot bool
+	Debug            bool
 }
 
 func hashCacheKey(data string) string {
@@ -37,17 +42,18 @@ func hashCacheKey(data string) string {
 	return base64.URLEncoding.EncodeToString(hash.Sum(nil))
 }
 
-func New(maxSize uint64, path string, clearCacheOnBoot bool) *Cache {
+func New(maxSize uint64, path string, options Options) *Cache {
 	cache := Cache{
 		list:    list.New(),
 		table:   make(map[string]*list.Element),
 		maxSize: maxSize,
 		path:    path,
+		debug:   options.Debug,
 	}
 
 	cache.Debug(fmt.Sprintf("new cache of size %d", maxSize))
 
-	if clearCacheOnBoot {
+	if options.ClearCacheOnBoot {
 		cache.Debug("clearing cache on boot")
 		os.RemoveAll(cache.path)
 		os.MkdirAll(cache.path, 0755)
@@ -57,7 +63,7 @@ func New(maxSize uint64, path string, clearCacheOnBoot bool) *Cache {
 }
 
 func (cache *Cache) Debug(msg string) {
-	if cache.ShowDebug {
+	if cache.debug {
 		fmt.Println("[lru]", msg)
 	}
 }
