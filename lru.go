@@ -13,6 +13,12 @@ import (
 	"time"
 )
 
+var (
+	bufferPool = sync.Pool{
+		New: func() interface{} { return &bytes.Buffer{} },
+	}
+)
+
 type object struct {
 	key        string
 	size       uint64
@@ -113,8 +119,9 @@ func (cache *Cache) GetBuffer(key string) (data *bytes.Buffer, ok bool) {
 		return nil, false
 	}
 
-	data = &bytes.Buffer{}
+	data = bufferPool.Get().(*bytes.Buffer)
 
+	data.Reset()
 	io.Copy(data, file)
 
 	if err != nil {
