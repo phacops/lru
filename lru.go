@@ -121,6 +121,7 @@ func (cache *Cache) GetBuffer(key string) (data *bytes.Buffer, ok bool) {
 
 	data = bufferPool.Get().(*bytes.Buffer)
 
+	defer bufferPool.Put(data)
 	data.Reset()
 	io.Copy(data, file)
 
