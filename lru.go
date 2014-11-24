@@ -113,6 +113,8 @@ func (cache *Cache) GetBuffer(key string) (data *bytes.Buffer, ok bool) {
 		return nil, false
 	}
 
+	data = &bytes.Buffer{}
+
 	io.Copy(data, file)
 
 	if err != nil {
