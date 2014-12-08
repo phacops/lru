@@ -1,22 +1,14 @@
 package lru
 
 import (
-	"bytes"
 	"container/list"
 	"encoding/base64"
 	"fmt"
 	"hash/fnv"
-	"io"
 	"io/ioutil"
 	"os"
 	"sync"
 	"time"
-)
-
-var (
-	bufferPool = sync.Pool{
-		New: func() interface{} { return new(bytes.Buffer) },
-	}
 )
 
 type object struct {
@@ -99,38 +91,6 @@ func (cache *Cache) Get(key string) ([]byte, bool) {
 	}
 
 	return value, true
-}
-
-func (cache *Cache) GetBuffer(key string) (data *bytes.Buffer, ok bool) {
-	cache.Lock()
-	defer cache.Unlock()
-
-	element := cache.table[key]
-
-	if element == nil {
-		return nil, false
-	}
-
-	cache.moveToFront(element)
-
-	file, err := os.Open(cache.FilePath(element.Value.(*object).key))
-
-	if err != nil {
-		return nil, false
-	}
-
-	data = bufferPool.Get().(*bytes.Buffer)
-
-	defer bufferPool.Put(data)
-	data.Reset()
-
-	_, err = io.Copy(data, file)
-
-	if err != nil {
-		return nil, false
-	}
-
-	return data, true
 }
 
 func (cache *Cache) Set(key string, value []byte) {
