@@ -15,7 +15,7 @@ import (
 
 var (
 	bufferPool = sync.Pool{
-		New: func() interface{} { return &bytes.Buffer{} },
+		New: func() interface{} { return new(bytes.Buffer) },
 	}
 )
 
@@ -123,7 +123,8 @@ func (cache *Cache) GetBuffer(key string) (data *bytes.Buffer, ok bool) {
 
 	defer bufferPool.Put(data)
 	data.Reset()
-	io.Copy(data, file)
+
+	_, err = io.Copy(data, file)
 
 	if err != nil {
 		return nil, false
